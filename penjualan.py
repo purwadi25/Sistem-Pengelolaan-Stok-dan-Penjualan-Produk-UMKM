@@ -15,7 +15,10 @@ from PySide6.QtWidgets import (
     QScrollArea,
 )
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import (
+    Qt,
+    QDate
+)
 
 
 class PenjualanPage(QWidget):
@@ -479,14 +482,14 @@ class PenjualanPage(QWidget):
     def refresh_produk(self):
 
         keyword = self.search_input.text().lower()
-
+        self.filtered_produk = []
         self.table_produk.setRowCount(0)
 
         for produk in self.app_data:
 
             if keyword not in produk["nama"].lower():
                 continue
-
+            self.filtered_produk.append(produk)
             row = self.table_produk.rowCount()
 
             self.table_produk.insertRow(row)
@@ -517,7 +520,7 @@ class PenjualanPage(QWidget):
         if column != 4:
             return
 
-        produk = self.app_data[row]
+        produk = self.filtered_produk[row]
 
         if produk["stok"] <= 0:
 
@@ -529,8 +532,29 @@ class PenjualanPage(QWidget):
 
             return
 
+        for keranjang_item in self.keranjang:
+
+            if keranjang_item["nama"] == produk["nama"]:
+
+                if keranjang_item["qty"] >= produk["stok"]:
+
+                    QMessageBox.warning(
+                        self,
+                        "Error",
+                        "Jumlah melebihi stok!"
+                    )
+
+                    return
+
+                keranjang_item["qty"] += 1
+
+                self.refresh_keranjang()
+
+                return
+
         item = {
             "nama": produk["nama"],
+            "modal": produk["modal"],
             "harga": produk["harga"],
             "qty": 1
         }
@@ -547,6 +571,7 @@ class PenjualanPage(QWidget):
         self.table_keranjang.setRowCount(0)
 
         total = 0
+        
 
         for item in self.keranjang:
 
@@ -584,7 +609,21 @@ class PenjualanPage(QWidget):
 
         if column == 3:
 
-            self.keranjang.pop(row)
+            item = self.keranjang[row]
+
+            # =====================================================
+            # KURANGI QTY
+            # =====================================================
+            if item["qty"] > 1:
+
+                item["qty"] -= 1
+
+            # =====================================================
+            # HAPUS ITEM
+            # =====================================================
+            else:
+
+                self.keranjang.pop(row)
 
             self.refresh_keranjang()
 
@@ -604,12 +643,20 @@ class PenjualanPage(QWidget):
             return
 
         total = 0
+        total_keuntungan = 0
 
         for item in self.keranjang:
 
             subtotal = item["harga"] * item["qty"]
 
             total += subtotal
+
+            keuntungan_item = (
+                (item["harga"] - item["modal"])
+                * item["qty"]
+            )
+
+            total_keuntungan += keuntungan_item
 
             # KURANGI STOK
             for produk in self.app_data:
@@ -619,11 +666,14 @@ class PenjualanPage(QWidget):
                     produk["stok"] -= item["qty"]
 
         transaksi = {
-            "tanggal": "02 Juni 2026",
+            "tanggal": QDate.currentDate().toString(
+                "dd MMMM yyyy"
+            ),
             "transaksi": f"TRX{len(self.data_penjualan)+1:03}",
             "pelanggan": "Umum",
             "total": f"Rp {total:,}".replace(",", "."),
-            "status": "Selesai"
+            "status": "Selesai",
+            "keuntungan": total_keuntungan
         }
 
         self.data_penjualan.append(
@@ -643,6 +693,12 @@ class PenjualanPage(QWidget):
         self.refresh_riwayat()
 
         self.dashboard.refresh_dashboard()
+
+        if hasattr(self.window(), "laporan_page"):
+
+            self.window().laporan_page.refresh_table()
+
+        self.window().save_data()
 
         self.update_statistik()
 
@@ -699,9 +755,7 @@ class PenjualanPage(QWidget):
 
             total_penjualan += int(angka)
 
-        for item in self.keranjang:
-
-            total_produk += item["qty"]
+        total_produk = len(self.data_penjualan)
 
         self.transaksi_value.setText(
             str(total_transaksi)

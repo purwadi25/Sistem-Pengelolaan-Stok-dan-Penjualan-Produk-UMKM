@@ -1,0 +1,39 @@
+[
+    {
+        "tanggal": "02 Juni 2026",
+        "transaksi": "TRX001",
+        "pelanggan": "Umum",
+        "total": "Rp 1",
+        "status": "Selesai"
+    },
+    {
+        "tanggal": "02 Juni 2026",
+        "transaksi": "TRX002",
+        "pelanggan": "Umum",
+        "total": "Rp 30.000",
+        "status": "Selesai"
+    },
+    {
+        "transaksi": "TRX003",
+        "tanggal": "03/06/2026",
+        "pelanggan": "Pelanggan Umum",
+        "total": "Rp 10000",
+        "status": "Selesai"
+    },
+    {
+        "tanggal": "02 Juni 2026",
+        "transaksi": "TRX004",
+        "pelanggan": "Umum",
+        "total": "Rp 20.000",
+        "status": "Selesai",
+        "keuntungan": 10000
+    },
+    {
+        "tanggal": "03 June 2026",
+        "transaksi": "TRX005",
+        "pelanggan": "Umum",
+        "total": "Rp 10.000",
+        "status": "Selesai",
+        "keuntungan": 5000
+    }
+]

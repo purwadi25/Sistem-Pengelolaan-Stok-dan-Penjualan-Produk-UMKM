@@ -270,7 +270,7 @@ class StokProdukPage(QWidget):
                 row,
                 3,
                 QTableWidgetItem(
-                    f"Rp {p['harga']}"
+                    f"Rp {p['harga']:,}".replace(",", ".")
                 )
             )
 

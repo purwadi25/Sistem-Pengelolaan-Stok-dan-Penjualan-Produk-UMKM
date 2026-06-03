@@ -1,0 +1,10 @@
+[
+    {
+        "nama": "a",
+        "kategori": "Minuman",
+        "harga": 10000,
+        "modal": 5000,
+        "stok": 13,
+        "satuan": "pcs"
+    }
+]

@@ -252,8 +252,7 @@ class MainWindow(QMainWindow):
 
         self.resize(1500, 850)
 
-        self.data_produk = []
-        self.data_penjualan = []
+        self.load_data()
 
         central = QWidget()
         self.setCentralWidget(central)
@@ -389,7 +388,81 @@ class MainWindow(QMainWindow):
         root.addWidget(sidebar)
         root.addWidget(self.stack)
 
+    # =========================================================
+    # LOAD DATA JSON
+    # =========================================================
+    
+    def load_data(self):
+
+        # =========================
+        # DATA PRODUK
+        # =========================
+        if os.path.exists("produk.json"):
+
+            try:
+                with open("produk.json", "r") as file:
+                    self.data_produk = json.load(file)
+
+            except:
+                self.data_produk = []
+
+        else:
+            self.data_produk = []
+
+        # =========================
+        # DATA PENJUALAN
+        # =========================
+        if os.path.exists("penjualan.json"):
+
+            try:
+                with open("penjualan.json", "r") as file:
+                    self.data_penjualan = json.load(file)
+
+            except:
+                self.data_penjualan = []
+
+        else:
+            self.data_penjualan = []
+
+    # =========================================================
+    # SAVE DATA JSON
+    # =========================================================
+    def save_data(self):
+
+        with open("produk.json", "w") as file:
+
+            json.dump(
+                self.data_produk,
+                file,
+                indent=4,
+                ensure_ascii=False
+            )
+
+        with open("penjualan.json", "w") as file:
+
+            json.dump(
+                self.data_penjualan,
+                file,
+                indent=4,
+                ensure_ascii=False
+            )
+
+
+    # =========================================================
+    # AUTO SAVE SAAT CLOSE
+    # =========================================================
+    def closeEvent(self, event):
+
+        self.save_data()
+
+        event.accept()
+
+    # =========================================================
+    # LOGOUT
+    # =========================================================
     def logout(self):
+
+        self.save_data()
 
         self.login = LoginWindow()
         self.login.show()
