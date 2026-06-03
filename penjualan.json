@@ -35,5 +35,31 @@
         "total": "Rp 10.000",
         "status": "Selesai",
         "keuntungan": 5000
+    },
+    {
+        "tanggal": "03 June 2026",
+        "transaksi": "TRX006",
+        "pelanggan": "Umum",
+        "total": "Rp 10.000",
+        "status": "Selesai",
+        "keuntungan": 5000
+    },
+    {
+        "tanggal": "03 June 2026",
+        "transaksi": "TRX007",
+        "pelanggan": "Umum",
+        "kategori": "Minuman",
+        "total": "Rp 10.000",
+        "status": "Selesai",
+        "keuntungan": 5000
+    },
+    {
+        "tanggal": "03 June 2026",
+        "transaksi": "TRX008",
+        "pelanggan": "Umum",
+        "kategori": "Minuman",
+        "total": "Rp 20.000",
+        "status": "Selesai",
+        "keuntungan": 10000
     }
 ]

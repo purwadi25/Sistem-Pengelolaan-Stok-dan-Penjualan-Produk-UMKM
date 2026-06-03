@@ -8,14 +8,13 @@ from PySide6.QtWidgets import (
     QPushButton,
     QVBoxLayout,
     QHBoxLayout,
-    QTableWidget,
-    QTableWidgetItem,
-    QHeaderView,
     QLineEdit,
-    QMessageBox
+    QMessageBox,
+    QScrollArea
 )
 
 from PySide6.QtCore import Qt
+
 
 class PengaturanPage(QWidget):
     def __init__(self, main_window):
@@ -32,13 +31,13 @@ class PengaturanPage(QWidget):
 
         self.setStyleSheet("""
             QWidget{
-                background:#f8fafc;
+                background:#f4f7fb;
                 font-family:'Segoe UI';
             }
 
             QFrame{
                 background:white;
-                border-radius:12px;
+                border-radius:20px;
                 border:1px solid #e5e7eb;
             }
 
@@ -47,47 +46,101 @@ class PengaturanPage(QWidget):
             }
 
             QLineEdit{
-                border:1px solid #d1d5db;
-                border-radius:8px;
-                padding:10px;
-                font-size:13px;
+                border:2px solid #e5e7eb;
+                border-radius:12px;
+                padding:14px;
+                font-size:14px;
                 background:white;
+                color:#111827;
+            }
+
+            QLineEdit:focus{
+                border:2px solid #14b8a6;
             }
 
             QPushButton{
-                padding:12px;
-                border-radius:8px;
+                padding:14px;
+                border-radius:12px;
                 font-weight:bold;
-                font-size:13px;
+                font-size:14px;
                 border:none;
             }
         """)
 
-        root = QVBoxLayout(self)
-        root.setContentsMargins(20, 20, 20, 20)
-        root.setSpacing(15)
+        # =================================================
+        # MAIN LAYOUT
+        # =================================================
+        main_layout = QVBoxLayout(self)
+
+        main_layout.setContentsMargins(0, 0, 0, 0)
+
+        # =================================================
+        # SCROLL AREA
+        # =================================================
+        scroll = QScrollArea()
+
+        scroll.setWidgetResizable(True)
+
+        scroll.setHorizontalScrollBarPolicy(
+            Qt.ScrollBarAlwaysOff
+        )
+
+        scroll.setStyleSheet("""
+            QScrollArea{
+                border:none;
+                background:#f4f7fb;
+            }
+        """)
+
+        main_layout.addWidget(scroll)
+
+        # =================================================
+        # CONTAINER
+        # =================================================
+        container = QWidget()
+
+        scroll.setWidget(container)
+
+        root = QVBoxLayout(container)
+
+        root.setContentsMargins(30, 25, 30, 25)
+        root.setSpacing(24)
 
         # =================================================
         # HEADER
         # =================================================
-        title = QLabel("Pengaturan Aplikasi")
+        title = QLabel("⚙ Pengaturan Aplikasi")
 
         title.setStyleSheet("""
-            font-size:28px;
-            font-weight:bold;
+            font-size:36px;
+            font-weight:800;
+            color:#111827;
         """)
 
         subtitle = QLabel(
-            "Kelola informasi aplikasi dan akun UMKM"
+            "Kelola informasi toko dan akun aplikasi UMKM"
         )
 
         subtitle.setStyleSheet("""
             color:#6b7280;
-            font-size:13px;
+            font-size:15px;
         """)
 
         root.addWidget(title)
         root.addWidget(subtitle)
+
+        # =================================================
+        # CONTENT ROW
+        # =================================================
+        content_row = QHBoxLayout()
+
+        # =================================================
+        # KOLOM KIRI
+        # =================================================
+        left_layout = QVBoxLayout()
+
+        left_layout.setAlignment(Qt.AlignTop)
+        left_layout.setSpacing(20)
 
         # =================================================
         # INFORMASI TOKO
@@ -96,71 +149,68 @@ class PengaturanPage(QWidget):
 
         toko_layout = QVBoxLayout(toko_frame)
 
+        toko_layout.setContentsMargins(
+            24, 24, 24, 24
+        )
+
+        toko_layout.setSpacing(16)
+
         toko_title = QLabel("🏪 Informasi Toko")
 
         toko_title.setStyleSheet("""
-            font-size:18px;
-            font-weight:bold;
+            font-size:22px;
+            font-weight:800;
         """)
 
         toko_layout.addWidget(toko_title)
 
         self.input_nama_toko = QLineEdit()
         self.input_nama_toko.setPlaceholderText(
-            "Nama Toko"
+            "Masukkan nama toko"
         )
 
         self.input_pemilik = QLineEdit()
         self.input_pemilik.setPlaceholderText(
-            "Nama Pemilik"
+            "Masukkan nama pemilik"
         )
 
         self.input_alamat = QLineEdit()
         self.input_alamat.setPlaceholderText(
-            "Alamat Toko"
+            "Masukkan alamat toko"
         )
 
         self.input_telepon = QLineEdit()
         self.input_telepon.setPlaceholderText(
-            "Nomor Telepon"
+            "Masukkan nomor telepon"
         )
 
-        toko_layout.addWidget(
-            QLabel("Nama Toko")
-        )
+        labels = [
+            ("Nama Toko", self.input_nama_toko),
+            ("Nama Pemilik", self.input_pemilik),
+            ("Alamat", self.input_alamat),
+            ("Telepon", self.input_telepon),
+        ]
 
-        toko_layout.addWidget(
-            self.input_nama_toko
-        )
+        for text, widget in labels:
 
-        toko_layout.addWidget(
-            QLabel("Nama Pemilik")
-        )
+            label = QLabel(text)
 
-        toko_layout.addWidget(
-            self.input_pemilik
-        )
+            label.setStyleSheet("""
+                font-size:14px;
+                font-weight:600;
+                color:#374151;
+            """)
 
-        toko_layout.addWidget(
-            QLabel("Alamat")
-        )
-
-        toko_layout.addWidget(
-            self.input_alamat
-        )
-
-        toko_layout.addWidget(
-            QLabel("Telepon")
-        )
-
-        toko_layout.addWidget(
-            self.input_telepon
-        )
+            toko_layout.addWidget(label)
+            toko_layout.addWidget(widget)
 
         # BUTTON SIMPAN
         self.btn_simpan = QPushButton(
-            "Simpan Pengaturan"
+            "💾 Simpan Pengaturan"
         )
+
+        self.btn_simpan.setMinimumHeight(50)
+        self.btn_simpan.setMaximumWidth(300)
 
         self.btn_simpan.setStyleSheet("""
             QPushButton{
@@ -177,9 +227,16 @@ class PengaturanPage(QWidget):
             self.simpan_pengaturan
         )
 
-        toko_layout.addWidget(self.btn_simpan)
+        btn_wrap = QHBoxLayout()
 
-        root.addWidget(toko_frame)
+        btn_wrap.addStretch()
+        btn_wrap.addWidget(self.btn_simpan)
+        btn_wrap.addStretch()
+
+        toko_layout.addSpacing(10)
+        toko_layout.addLayout(btn_wrap)
+
+        left_layout.addWidget(toko_frame)
 
         # =================================================
         # PENGATURAN AKUN
@@ -188,45 +245,61 @@ class PengaturanPage(QWidget):
 
         akun_layout = QVBoxLayout(akun_frame)
 
+        akun_layout.setContentsMargins(
+            24, 24, 24, 24
+        )
+
+        akun_layout.setSpacing(16)
+
         akun_title = QLabel("🔐 Pengaturan Akun")
 
         akun_title.setStyleSheet("""
-            font-size:18px;
-            font-weight:bold;
+            font-size:22px;
+            font-weight:800;
         """)
 
         akun_layout.addWidget(akun_title)
 
         self.input_username = QLineEdit()
+
         self.input_username.setPlaceholderText(
-            "Username Baru"
+            "Masukkan username baru"
         )
 
         self.input_password = QLineEdit()
+
         self.input_password.setPlaceholderText(
-            "Password Baru"
+            "Masukkan password baru"
         )
 
-        akun_layout.addWidget(
-            QLabel("Username")
+        self.input_password.setEchoMode(
+            QLineEdit.Password
         )
 
-        akun_layout.addWidget(
-            self.input_username
-        )
+        akun_labels = [
+            ("Username", self.input_username),
+            ("Password", self.input_password),
+        ]
 
-        akun_layout.addWidget(
-            QLabel("Password")
-        )
+        for text, widget in akun_labels:
 
-        akun_layout.addWidget(
-            self.input_password
-        )
+            label = QLabel(text)
 
-        # BUTTON UPDATE
+            label.setStyleSheet("""
+                font-size:14px;
+                font-weight:600;
+                color:#374151;
+            """)
+
+            akun_layout.addWidget(label)
+            akun_layout.addWidget(widget)
+
         self.btn_update_akun = QPushButton(
-            "Update Akun"
+            "🔄 Update Akun"
         )
+
+        self.btn_update_akun.setMinimumHeight(50)
+        self.btn_update_akun.setMaximumWidth(250)
 
         self.btn_update_akun.setStyleSheet("""
             QPushButton{
@@ -243,57 +316,30 @@ class PengaturanPage(QWidget):
             self.update_akun
         )
 
-        akun_layout.addWidget(
+        akun_btn_wrap = QHBoxLayout()
+
+        akun_btn_wrap.addStretch()
+
+        akun_btn_wrap.addWidget(
             self.btn_update_akun
         )
 
-        root.addWidget(akun_frame)
+        akun_btn_wrap.addStretch()
+
+        akun_layout.addSpacing(10)
+
+        akun_layout.addLayout(
+            akun_btn_wrap
+        )
+
+        left_layout.addWidget(akun_frame)
 
         # =================================================
-        # INFORMASI APP
+        # ADD LAYOUT
         # =================================================
-        info_frame = QFrame()
+        content_row.addLayout(left_layout)
 
-        info_layout = QVBoxLayout(info_frame)
-
-        info_title = QLabel("ℹ Informasi Aplikasi")
-
-        info_title.setStyleSheet("""
-            font-size:18px;
-            font-weight:bold;
-        """)
-
-        info_layout.addWidget(info_title)
-
-        app_name = QLabel(
-            "Nama App : Sistem Pengelolaan UMKM"
-        )
-
-        version = QLabel(
-            "Versi : 1.0.0"
-        )
-
-        developer = QLabel(
-            "Developer : UMKM App Team"
-        )
-
-        app_name.setStyleSheet("""
-            font-size:13px;
-        """)
-
-        version.setStyleSheet("""
-            font-size:13px;
-        """)
-
-        developer.setStyleSheet("""
-            font-size:13px;
-        """)
-
-        info_layout.addWidget(app_name)
-        info_layout.addWidget(version)
-        info_layout.addWidget(developer)
-
-        root.addWidget(info_frame)
+        root.addLayout(content_row)
 
         root.addStretch()
 

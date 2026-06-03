@@ -23,7 +23,6 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt
 from dashboard import DashboardPage
 from kelola_produk import KelolaProdukPage
-from stok_produk import StokProdukPage
 from penjualan import PenjualanPage
 from laporan import LaporanPenjualanPage
 from pengaturan import PengaturanPage
@@ -298,11 +297,6 @@ class MainWindow(QMainWindow):
             self.dashboard
         )
 
-        self.stok_produk = StokProdukPage(
-            self.data_produk,
-            self.dashboard
-        )
-
         self.penjualan_page = PenjualanPage(
             self.data_produk,
             self.data_penjualan,
@@ -320,7 +314,6 @@ class MainWindow(QMainWindow):
         # ADD PAGE
         self.stack.addWidget(self.dashboard)
         self.stack.addWidget(self.kelola_produk)
-        self.stack.addWidget(self.stok_produk)
         self.stack.addWidget(self.penjualan_page)
         self.stack.addWidget(self.laporan_page)
         self.stack.addWidget(self.pengaturan_page)
@@ -329,10 +322,9 @@ class MainWindow(QMainWindow):
         menus = [
             ("🏠 Dashboard", 0),
             ("🛠 Kelola Produk", 1),
-            ("📦 Stok Produk", 2),
-            ("🛒 Penjualan", 3),
-            ("📊 Laporan Penjualan", 4),
-            ("⚙ Pengaturan", 5),
+            ("🛒 Penjualan", 2),
+            ("📊 Laporan Penjualan", 3),
+            ("⚙ Pengaturan", 4),
         ]
 
         for text, index in menus:

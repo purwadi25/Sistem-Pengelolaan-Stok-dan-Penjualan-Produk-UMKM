@@ -1,3 +1,6 @@
+# =========================================================
+# PENJUALAN PAGE
+# =========================================================
 from PySide6.QtWidgets import (
     QWidget,
     QLabel,
@@ -9,9 +12,7 @@ from PySide6.QtWidgets import (
     QTableWidgetItem,
     QHeaderView,
     QLineEdit,
-    QComboBox,
     QMessageBox,
-    QSpinBox,
     QScrollArea,
 )
 
@@ -20,9 +21,17 @@ from PySide6.QtCore import (
     QDate
 )
 
+from PySide6.QtGui import QColor
+
 
 class PenjualanPage(QWidget):
-    def __init__(self, app_data, data_penjualan, dashboard):
+
+    def __init__(
+        self,
+        app_data,
+        data_penjualan,
+        dashboard
+    ):
         super().__init__()
 
         self.app_data = app_data
@@ -72,7 +81,13 @@ class PenjualanPage(QWidget):
 
         root = QVBoxLayout(container)
 
-        root.setContentsMargins(30, 25, 30, 25)
+        root.setContentsMargins(
+            30,
+            25,
+            30,
+            25
+        )
+
         root.setSpacing(25)
 
         # =====================================================
@@ -119,7 +134,12 @@ class PenjualanPage(QWidget):
 
             layout = QHBoxLayout(card)
 
-            layout.setContentsMargins(20, 20, 20, 20)
+            layout.setContentsMargins(
+                20,
+                20,
+                20,
+                20
+            )
 
             icon_label = QLabel(icon)
 
@@ -199,6 +219,8 @@ class PenjualanPage(QWidget):
         # =====================================================
         content_row = QHBoxLayout()
 
+        content_row.setSpacing(20)
+
         # =====================================================
         # PRODUK
         # =====================================================
@@ -214,6 +236,13 @@ class PenjualanPage(QWidget):
 
         produk_layout = QVBoxLayout(produk_card)
 
+        produk_layout.setContentsMargins(
+            20,
+            20,
+            20,
+            20
+        )
+
         produk_title = QLabel("Daftar Produk")
 
         produk_title.setStyleSheet("""
@@ -224,7 +253,9 @@ class PenjualanPage(QWidget):
 
         produk_layout.addWidget(produk_title)
 
+        # =====================================================
         # SEARCH
+        # =====================================================
         self.search_input = QLineEdit()
 
         self.search_input.setPlaceholderText(
@@ -245,9 +276,13 @@ class PenjualanPage(QWidget):
             }
         """)
 
-        produk_layout.addWidget(self.search_input)
+        produk_layout.addWidget(
+            self.search_input
+        )
 
+        # =====================================================
         # TABLE PRODUK
+        # =====================================================
         self.table_produk = QTableWidget(0, 5)
 
         self.table_produk.setHorizontalHeaderLabels([
@@ -263,6 +298,8 @@ class PenjualanPage(QWidget):
         )
 
         self.table_produk.verticalHeader().setVisible(False)
+
+        self.table_produk.setMinimumHeight(280)
 
         self.table_produk.setStyleSheet("""
             QTableWidget{
@@ -283,7 +320,9 @@ class PenjualanPage(QWidget):
             self.handle_produk_click
         )
 
-        produk_layout.addWidget(self.table_produk)
+        produk_layout.addWidget(
+            self.table_produk
+        )
 
         # =====================================================
         # KERANJANG
@@ -300,9 +339,20 @@ class PenjualanPage(QWidget):
             }
         """)
 
-        keranjang_layout = QVBoxLayout(keranjang_card)
+        keranjang_layout = QVBoxLayout(
+            keranjang_card
+        )
 
-        keranjang_title = QLabel("Keranjang Penjualan")
+        keranjang_layout.setContentsMargins(
+            20,
+            20,
+            20,
+            20
+        )
+
+        keranjang_title = QLabel(
+            "Keranjang Penjualan"
+        )
 
         keranjang_title.setStyleSheet("""
             font-size:24px;
@@ -310,9 +360,13 @@ class PenjualanPage(QWidget):
             color:#111827;
         """)
 
-        keranjang_layout.addWidget(keranjang_title)
+        keranjang_layout.addWidget(
+            keranjang_title
+        )
 
+        # =====================================================
         # TABLE KERANJANG
+        # =====================================================
         self.table_keranjang = QTableWidget(0, 4)
 
         self.table_keranjang.setHorizontalHeaderLabels([
@@ -328,11 +382,18 @@ class PenjualanPage(QWidget):
 
         self.table_keranjang.verticalHeader().setVisible(False)
 
+        self.table_keranjang.setMinimumHeight(180)
+
+        self.table_keranjang.setAlternatingRowColors(True)
+
+        self.table_keranjang.setShowGrid(False)
+
         self.table_keranjang.setStyleSheet("""
             QTableWidget{
                 border:none;
                 background:white;
                 font-size:13px;
+                alternate-background-color:#f9fafb;
             }
 
             QHeaderView::section{
@@ -341,15 +402,23 @@ class PenjualanPage(QWidget):
                 border:none;
                 font-weight:bold;
             }
+
+            QTableWidget::item{
+                padding:10px;
+            }
         """)
 
         self.table_keranjang.cellClicked.connect(
             self.handle_keranjang_click
         )
 
-        keranjang_layout.addWidget(self.table_keranjang)
+        keranjang_layout.addWidget(
+            self.table_keranjang
+        )
 
+        # =====================================================
         # TOTAL
+        # =====================================================
         total_frame = QFrame()
 
         total_frame.setStyleSheet("""
@@ -381,7 +450,9 @@ class PenjualanPage(QWidget):
 
         keranjang_layout.addWidget(total_frame)
 
-        # BUTTON
+        # =====================================================
+        # BUTTON BAYAR
+        # =====================================================
         bayar_btn = QPushButton("🛒 Bayar")
 
         bayar_btn.setStyleSheet("""
@@ -404,9 +475,13 @@ class PenjualanPage(QWidget):
             self.proses_pembayaran
         )
 
-        keranjang_layout.addWidget(bayar_btn)
+        keranjang_layout.addWidget(
+            bayar_btn
+        )
 
-        # ADD
+        # =====================================================
+        # ADD CONTENT
+        # =====================================================
         content_row.addWidget(produk_card)
         content_row.addWidget(keranjang_card)
 
@@ -425,7 +500,16 @@ class PenjualanPage(QWidget):
             }
         """)
 
-        riwayat_layout = QVBoxLayout(riwayat_card)
+        riwayat_layout = QVBoxLayout(
+            riwayat_card
+        )
+
+        riwayat_layout.setContentsMargins(
+            20,
+            20,
+            20,
+            20
+        )
 
         riwayat_title = QLabel(
             "Riwayat Transaksi"
@@ -436,13 +520,16 @@ class PenjualanPage(QWidget):
             font-weight:bold;
         """)
 
-        riwayat_layout.addWidget(riwayat_title)
+        riwayat_layout.addWidget(
+            riwayat_title
+        )
 
-        self.table_riwayat = QTableWidget(0, 5)
+        self.table_riwayat = QTableWidget(0, 6)
 
         self.table_riwayat.setHorizontalHeaderLabels([
             "No Transaksi",
             "Tanggal",
+            "Kategori",
             "Pelanggan",
             "Total",
             "Status"
@@ -453,6 +540,8 @@ class PenjualanPage(QWidget):
         )
 
         self.table_riwayat.verticalHeader().setVisible(False)
+
+        self.table_riwayat.setMinimumHeight(250)
 
         self.table_riwayat.setStyleSheet("""
             QTableWidget{
@@ -469,7 +558,9 @@ class PenjualanPage(QWidget):
             }
         """)
 
-        riwayat_layout.addWidget(self.table_riwayat)
+        riwayat_layout.addWidget(
+            self.table_riwayat
+        )
 
         root.addWidget(riwayat_card)
 
@@ -481,15 +572,22 @@ class PenjualanPage(QWidget):
     # =====================================================
     def refresh_produk(self):
 
-        keyword = self.search_input.text().lower()
+        keyword = (
+            self.search_input.text()
+            .lower()
+        )
+
         self.filtered_produk = []
+
         self.table_produk.setRowCount(0)
 
         for produk in self.app_data:
 
             if keyword not in produk["nama"].lower():
                 continue
+
             self.filtered_produk.append(produk)
+
             row = self.table_produk.rowCount()
 
             self.table_produk.insertRow(row)
@@ -506,6 +604,10 @@ class PenjualanPage(QWidget):
 
                 item = QTableWidgetItem(value)
 
+                item.setTextAlignment(
+                    Qt.AlignCenter
+                )
+
                 self.table_produk.setItem(
                     row,
                     col,
@@ -515,7 +617,11 @@ class PenjualanPage(QWidget):
     # =====================================================
     # TAMBAH KE KERANJANG
     # =====================================================
-    def handle_produk_click(self, row, column):
+    def handle_produk_click(
+        self,
+        row,
+        column
+    ):
 
         if column != 4:
             return
@@ -554,6 +660,7 @@ class PenjualanPage(QWidget):
 
         item = {
             "nama": produk["nama"],
+            "kategori": produk["kategori"],
             "modal": produk["modal"],
             "harga": produk["harga"],
             "qty": 1
@@ -571,7 +678,6 @@ class PenjualanPage(QWidget):
         self.table_keranjang.setRowCount(0)
 
         total = 0
-        
 
         for item in self.keranjang:
 
@@ -579,7 +685,10 @@ class PenjualanPage(QWidget):
 
             self.table_keranjang.insertRow(row)
 
-            subtotal = item["harga"] * item["qty"]
+            subtotal = (
+                item["harga"]
+                * item["qty"]
+            )
 
             total += subtotal
 
@@ -587,15 +696,33 @@ class PenjualanPage(QWidget):
                 item["nama"],
                 str(item["qty"]),
                 f"Rp {subtotal:,}".replace(",", "."),
-                "🗑"
+                "➖"
             ]
 
             for col, value in enumerate(data):
 
+                item_widget = QTableWidgetItem(value)
+
+                item_widget.setTextAlignment(
+                    Qt.AlignCenter
+                )
+
+                if col == 3:
+
+                    item_widget.setForeground(
+                        QColor("#ef4444")
+                    )
+
+                    font = item_widget.font()
+
+                    font.setBold(True)
+
+                    item_widget.setFont(font)
+
                 self.table_keranjang.setItem(
                     row,
                     col,
-                    QTableWidgetItem(value)
+                    item_widget
                 )
 
         self.total_bayar.setText(
@@ -603,24 +730,22 @@ class PenjualanPage(QWidget):
         )
 
     # =====================================================
-    # HAPUS KERANJANG
+    # HAPUS / KURANGI QTY
     # =====================================================
-    def handle_keranjang_click(self, row, column):
+    def handle_keranjang_click(
+        self,
+        row,
+        column
+    ):
 
         if column == 3:
 
             item = self.keranjang[row]
 
-            # =====================================================
-            # KURANGI QTY
-            # =====================================================
             if item["qty"] > 1:
 
                 item["qty"] -= 1
 
-            # =====================================================
-            # HAPUS ITEM
-            # =====================================================
             else:
 
                 self.keranjang.pop(row)
@@ -645,20 +770,32 @@ class PenjualanPage(QWidget):
         total = 0
         total_keuntungan = 0
 
+        kategori_transaksi = "Umum"
+
         for item in self.keranjang:
 
-            subtotal = item["harga"] * item["qty"]
+            kategori_transaksi = item["kategori"]
+
+            subtotal = (
+                item["harga"]
+                * item["qty"]
+            )
 
             total += subtotal
 
             keuntungan_item = (
-                (item["harga"] - item["modal"])
+                (
+                    item["harga"]
+                    - item["modal"]
+                )
                 * item["qty"]
             )
 
             total_keuntungan += keuntungan_item
 
+            # =================================================
             # KURANGI STOK
+            # =================================================
             for produk in self.app_data:
 
                 if produk["nama"] == item["nama"]:
@@ -671,6 +808,7 @@ class PenjualanPage(QWidget):
             ),
             "transaksi": f"TRX{len(self.data_penjualan)+1:03}",
             "pelanggan": "Umum",
+            "kategori": kategori_transaksi,
             "total": f"Rp {total:,}".replace(",", "."),
             "status": "Selesai",
             "keuntungan": total_keuntungan
@@ -694,7 +832,10 @@ class PenjualanPage(QWidget):
 
         self.dashboard.refresh_dashboard()
 
-        if hasattr(self.window(), "laporan_page"):
+        if hasattr(
+            self.window(),
+            "laporan_page"
+        ):
 
             self.window().laporan_page.refresh_table()
 
@@ -709,7 +850,9 @@ class PenjualanPage(QWidget):
 
         self.table_riwayat.setRowCount(0)
 
-        for data in reversed(self.data_penjualan):
+        for data in reversed(
+            self.data_penjualan
+        ):
 
             row = self.table_riwayat.rowCount()
 
@@ -718,6 +861,7 @@ class PenjualanPage(QWidget):
             isi = [
                 data["transaksi"],
                 data["tanggal"],
+                data.get("kategori", "-"),
                 data["pelanggan"],
                 data["total"],
                 data["status"]
@@ -725,10 +869,18 @@ class PenjualanPage(QWidget):
 
             for col, value in enumerate(isi):
 
+                item = QTableWidgetItem(
+                    str(value)
+                )
+
+                item.setTextAlignment(
+                    Qt.AlignCenter
+                )
+
                 self.table_riwayat.setItem(
                     row,
                     col,
-                    QTableWidgetItem(value)
+                    item
                 )
 
         self.update_statistik()
@@ -743,7 +895,6 @@ class PenjualanPage(QWidget):
         )
 
         total_penjualan = 0
-        total_produk = 0
 
         for data in self.data_penjualan:
 
@@ -755,7 +906,9 @@ class PenjualanPage(QWidget):
 
             total_penjualan += int(angka)
 
-        total_produk = len(self.data_penjualan)
+        total_produk = len(
+            self.data_penjualan
+        )
 
         self.transaksi_value.setText(
             str(total_transaksi)

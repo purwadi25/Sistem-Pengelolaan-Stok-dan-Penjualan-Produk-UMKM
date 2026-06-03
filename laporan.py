@@ -18,7 +18,6 @@ from PySide6.QtCore import (
     QDate,
     QPropertyAnimation,
     QEasingCurve,
-    QRectF,
     QMargins
 )
 
@@ -37,6 +36,7 @@ from PySide6.QtCharts import (
 
 
 class LaporanPenjualanPage(QWidget):
+
     def __init__(self, data_penjualan):
         super().__init__()
 
@@ -57,7 +57,10 @@ class LaporanPenjualanPage(QWidget):
         """)
 
         main_layout = QVBoxLayout(self)
-        main_layout.setContentsMargins(0,0,0,0)
+
+        main_layout.setContentsMargins(
+            0, 0, 0, 0
+        )
 
         # =====================================================
         # SCROLL
@@ -112,7 +115,10 @@ class LaporanPenjualanPage(QWidget):
 
         root = QVBoxLayout(container)
 
-        root.setContentsMargins(30, 25, 30, 25)
+        root.setContentsMargins(
+            30, 25, 30, 25
+        )
+
         root.setSpacing(24)
 
         # =====================================================
@@ -144,7 +150,6 @@ class LaporanPenjualanPage(QWidget):
         cards_layout = QHBoxLayout()
 
         cards_layout.setSpacing(14)
-        cards_layout.setContentsMargins(0,0,0,0)
 
         def create_card(title, value, icon, color):
 
@@ -163,11 +168,15 @@ class LaporanPenjualanPage(QWidget):
 
             layout = QHBoxLayout(card)
 
-            layout.setContentsMargins(18, 18, 18, 18)
+            layout.setContentsMargins(
+                18, 18, 18, 18
+            )
 
             icon_label = QLabel(icon)
 
-            icon_label.setAlignment(Qt.AlignCenter)
+            icon_label.setAlignment(
+                Qt.AlignCenter
+            )
 
             icon_label.setStyleSheet(f"""
                 QLabel{{
@@ -187,6 +196,7 @@ class LaporanPenjualanPage(QWidget):
             """)
 
             text_layout = QVBoxLayout()
+
             text_layout.setSpacing(5)
 
             title_label = QLabel(title)
@@ -254,10 +264,12 @@ class LaporanPenjualanPage(QWidget):
         # =====================================================
         filter_card = QFrame()
 
+        filter_card.setFixedHeight(78)
+
         filter_card.setStyleSheet("""
             QFrame{
                 background:white;
-                border-radius:22px;
+                border-radius:18px;
                 border:1px solid #e5e7eb;
             }
         """)
@@ -265,34 +277,39 @@ class LaporanPenjualanPage(QWidget):
         filter_layout = QHBoxLayout(filter_card)
 
         filter_layout.setContentsMargins(
-            24, 24, 24, 24
+            16, 14, 16, 14
         )
 
-        filter_layout.setSpacing(14)
+        filter_layout.setSpacing(10)
 
         # =====================================================
         # DATE FILTER
         # =====================================================
         self.date_filter = QDateEdit()
 
-        self.date_filter.setDate(QDate.currentDate())
+        self.date_filter.setDate(
+            QDate.currentDate()
+        )
 
         self.date_filter.setCalendarPopup(True)
 
-        self.date_filter.setMinimumHeight(52)
+        self.date_filter.setFixedSize(
+            135,
+            38
+        )
 
         self.date_filter.setStyleSheet("""
             QDateEdit{
-                border:2px solid #e5e7eb;
-                border-radius:14px;
-                padding:12px;
+                border:1px solid #d1d5db;
+                border-radius:10px;
+                padding:6px 10px;
                 background:white;
-                font-size:14px;
+                font-size:13px;
                 color:#111827;
             }
 
             QDateEdit:focus{
-                border:2px solid #14b8a6;
+                border:1px solid #14b8a6;
             }
         """)
 
@@ -308,30 +325,43 @@ class LaporanPenjualanPage(QWidget):
             "Snack"
         ])
 
-        self.combo_filter.setMinimumHeight(52)
+        self.combo_filter.currentIndexChanged.connect(
+            self.refresh_table
+        )
+
+        self.combo_filter.setFixedSize(
+            170,
+            38
+        )
 
         self.combo_filter.setStyleSheet("""
             QComboBox{
-                border:2px solid #e5e7eb;
-                border-radius:14px;
-                padding-left:14px;
+                border:1px solid #d1d5db;
+                border-radius:10px;
+                padding-left:10px;
                 background:white;
-                font-size:14px;
+                font-size:13px;
                 color:#111827;
             }
 
             QComboBox:focus{
-                border:2px solid #14b8a6;
+                border:1px solid #14b8a6;
             }
 
             QComboBox::drop-down{
                 border:none;
-                width:35px;
+                width:28px;
             }
         """)
 
-        filter_layout.addWidget(self.date_filter)
-        filter_layout.addWidget(self.combo_filter)
+        filter_layout.addWidget(
+            self.date_filter
+        )
+
+        filter_layout.addWidget(
+            self.combo_filter
+        )
+
         filter_layout.addStretch()
 
         root.addWidget(filter_card)
@@ -354,7 +384,7 @@ class LaporanPenjualanPage(QWidget):
         grafik_layout = QVBoxLayout(grafik_card)
 
         grafik_layout.setContentsMargins(
-            24,24,24,24
+            24, 24, 24, 24
         )
 
         grafik_layout.setSpacing(18)
@@ -374,7 +404,10 @@ class LaporanPenjualanPage(QWidget):
         # =====================================================
         self.series = QLineSeries()
 
-        pen = QPen(QColor("#14b8a6"))
+        pen = QPen(
+            QColor("#14b8a6")
+        )
+
         pen.setWidth(4)
 
         self.series.setPen(pen)
@@ -400,14 +433,27 @@ class LaporanPenjualanPage(QWidget):
         axis_x.setGridLineVisible(False)
         axis_y.setGridLineVisible(True)
 
-        axis_x.setLabelsColor(QColor("#6b7280"))
-        axis_y.setLabelsColor(QColor("#6b7280"))
+        axis_x.setLabelsColor(
+            QColor("#6b7280")
+        )
 
-        chart.addAxis(axis_x, Qt.AlignBottom)
-        chart.addAxis(axis_y, Qt.AlignLeft)
+        axis_y.setLabelsColor(
+            QColor("#6b7280")
+        )
+
+        chart.addAxis(
+            axis_x,
+            Qt.AlignBottom
+        )
+
+        chart.addAxis(
+            axis_y,
+            Qt.AlignLeft
+        )
 
         self.series.attachAxis(axis_x)
         self.series.attachAxis(axis_y)
+
         self.axis_x = axis_x
         self.axis_y = axis_y
 
@@ -468,7 +514,7 @@ class LaporanPenjualanPage(QWidget):
         self.table.setHorizontalHeaderLabels([
             "No Transaksi",
             "Tanggal",
-            "Pelanggan",
+            "Kategori",
             "Total",
             "Status"
         ])
@@ -516,6 +562,7 @@ class LaporanPenjualanPage(QWidget):
         root.addWidget(table_card)
 
         self.refresh_table()
+
     # =====================================================
     # REFRESH TABLE
     # =====================================================
@@ -524,13 +571,37 @@ class LaporanPenjualanPage(QWidget):
         self.table.setRowCount(0)
 
         total_pendapatan = 0
+        total_keuntungan = 0
+
+        kategori_filter = (
+            self.combo_filter.currentText()
+        )
+
+        filtered_data = []
+
+        # =====================================================
+        # FILTER DATA
+        # =====================================================
+        for transaksi in self.data_penjualan:
+
+            if (
+                kategori_filter != "Semua Produk"
+                and
+                transaksi.get("kategori")
+                != kategori_filter
+            ):
+                continue
+
+            filtered_data.append(
+                transaksi
+            )
 
         # =====================================================
         # UPDATE CHART
         # =====================================================
         self.series.clear()
 
-        for i, data in enumerate(self.data_penjualan):
+        for i, data in enumerate(filtered_data):
 
             angka = (
                 data["total"]
@@ -548,11 +619,11 @@ class LaporanPenjualanPage(QWidget):
         # =====================================================
         # UPDATE AXIS
         # =====================================================
-        if len(self.data_penjualan) > 0:
+        if len(filtered_data) > 0:
 
             self.axis_x.setRange(
                 0,
-                len(self.data_penjualan)
+                len(filtered_data)
             )
 
             nilai_terbesar = max([
@@ -561,7 +632,7 @@ class LaporanPenjualanPage(QWidget):
                     .replace("Rp ", "")
                     .replace(".", "")
                 )
-                for data in self.data_penjualan
+                for data in filtered_data
             ])
 
             self.axis_y.setRange(
@@ -581,7 +652,7 @@ class LaporanPenjualanPage(QWidget):
         # =====================================================
         # UPDATE TABLE
         # =====================================================
-        for data in reversed(self.data_penjualan):
+        for data in reversed(filtered_data):
 
             row = self.table.rowCount()
 
@@ -590,14 +661,20 @@ class LaporanPenjualanPage(QWidget):
             isi = [
                 data["transaksi"],
                 data["tanggal"],
-                data["pelanggan"],
+                data.get("kategori", "-"),
                 data["total"],
                 data["status"]
             ]
 
             for col, value in enumerate(isi):
 
-                item = QTableWidgetItem(value)
+                item = QTableWidgetItem(
+                    str(value)
+                )
+
+                item.setTextAlignment(
+                    Qt.AlignCenter
+                )
 
                 if (
                     col == 4 and
@@ -620,13 +697,10 @@ class LaporanPenjualanPage(QWidget):
             )
 
             total_pendapatan += int(angka)
-            total_keuntungan = 0
 
-            for transaksi in self.data_penjualan:
+            if "keuntungan" in data:
 
-                if "keuntungan" in transaksi:
-
-                    total_keuntungan += transaksi["keuntungan"]
+                total_keuntungan += data["keuntungan"]
 
         # =====================================================
         # UPDATE CARD
@@ -636,11 +710,11 @@ class LaporanPenjualanPage(QWidget):
         )
 
         self.transaksi_value.setText(
-            str(len(self.data_penjualan))
+            str(len(filtered_data))
         )
 
         self.produk_value.setText(
-            str(len(self.data_penjualan))
+            str(len(filtered_data))
         )
 
         self.keuntungan_value.setText(
