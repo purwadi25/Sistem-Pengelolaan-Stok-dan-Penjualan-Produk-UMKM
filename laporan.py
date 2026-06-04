@@ -21,6 +21,8 @@ from PySide6.QtCore import (
     QMargins
 )
 
+from datetime import datetime
+
 from PySide6.QtGui import (
     QPainter,
     QColor,
@@ -77,7 +79,7 @@ class LaporanPenjualanPage(QWidget):
             Qt.ScrollBarAsNeeded
         )
 
-        scroll.verticalScrollBar().setSingleStep(20)
+        scroll.verticalScrollBar().setSingleStep(5)
 
         scroll.setStyleSheet("""
             QScrollArea{
@@ -292,6 +294,10 @@ class LaporanPenjualanPage(QWidget):
         )
 
         self.date_filter.setCalendarPopup(True)
+
+        self.date_filter.dateChanged.connect(
+            self.refresh_table
+        )
 
         self.date_filter.setFixedSize(
             135,
@@ -576,19 +582,64 @@ class LaporanPenjualanPage(QWidget):
         kategori_filter = (
             self.combo_filter.currentText()
         )
+        tanggal_filter = self.date_filter.date()
 
         filtered_data = []
 
-        # =====================================================
-        # FILTER DATA
-        # =====================================================
+        def parse_tanggal(tanggal):
+
+            bulan_id = {
+                "Januari": "January",
+                "Februari": "February",
+                "Maret": "March",
+                "April": "April",
+                "Mei": "May",
+                "Juni": "June",
+                "Juli": "July",
+                "Agustus": "August",
+                "September": "September",
+                "Oktober": "October",
+                "November": "November",
+                "Desember": "December"
+            }
+
+            for indo, eng in bulan_id.items():
+                tanggal = tanggal.replace(
+                    indo,
+                    eng
+                )
+
+            for fmt in ("%d/%m/%Y", "%d %B %Y"):
+                try:
+                    return datetime.strptime(
+                        tanggal,
+                        fmt
+                    )
+                except:
+                    pass
+
+            return None
+
+
         for transaksi in self.data_penjualan:
 
             if (
                 kategori_filter != "Semua Produk"
-                and
-                transaksi.get("kategori")
-                != kategori_filter
+                and transaksi.get("kategori") != kategori_filter
+            ):
+                continue
+
+            tanggal_data = parse_tanggal(
+                transaksi["tanggal"]
+            )
+
+            if tanggal_data is None:
+                continue
+
+            if (
+                tanggal_data.day != self.date_filter.date().day()
+                or tanggal_data.month != self.date_filter.date().month()
+                or tanggal_data.year != self.date_filter.date().year()
             ):
                 continue
 
@@ -596,12 +647,16 @@ class LaporanPenjualanPage(QWidget):
                 transaksi
             )
 
-        # =====================================================
-        # UPDATE CHART
-        # =====================================================
+
+        filtered_data.sort(
+            key=lambda x: parse_tanggal(
+                x["tanggal"]
+            )
+        )
+
         self.series.clear()
 
-        for i, data in enumerate(filtered_data):
+        for i, data in enumerate(filtered_data, start=1):
 
             angka = (
                 data["total"]
@@ -622,8 +677,8 @@ class LaporanPenjualanPage(QWidget):
         if len(filtered_data) > 0:
 
             self.axis_x.setRange(
-                0,
-                len(filtered_data)
+                1,
+                max(1, len(filtered_data))
             )
 
             nilai_terbesar = max([
@@ -721,36 +776,23 @@ class LaporanPenjualanPage(QWidget):
             f"Rp {total_keuntungan:,}".replace(",", ".")
         )
 
-    # =====================================================
-    # SMOOTH SCROLL
-    # =====================================================
     def smooth_wheel_event(self, event):
 
-        scrollbar = (
-            self.scroll.verticalScrollBar()
-        )
+        scrollbar = self.scroll.verticalScrollBar()
 
         current_value = scrollbar.value()
 
         delta = event.angleDelta().y()
 
-        scroll_amount = 180
-
-        if delta > 0:
-
-            new_value = (
-                current_value - scroll_amount
-            )
-
-        else:
-
-            new_value = (
-                current_value + scroll_amount
-            )
+        new_value = current_value - delta
 
         self.scroll_animation.stop()
 
-        self.scroll_animation.setDuration(350)
+        self.scroll_animation.setDuration(700)
+
+        self.scroll_animation.setEasingCurve(
+            QEasingCurve.OutQuart
+        )
 
         self.scroll_animation.setStartValue(
             current_value

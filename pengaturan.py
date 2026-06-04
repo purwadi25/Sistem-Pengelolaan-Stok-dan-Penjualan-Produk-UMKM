@@ -295,16 +295,19 @@ class PengaturanPage(QWidget):
             akun_layout.addWidget(widget)
 
         self.btn_update_akun = QPushButton(
-            "🔄 Update Akun"
+            "Update Akun"
         )
 
         self.btn_update_akun.setMinimumHeight(50)
-        self.btn_update_akun.setMaximumWidth(250)
 
         self.btn_update_akun.setStyleSheet("""
             QPushButton{
                 background:#3b82f6;
                 color:white;
+                padding:14px 28px;
+                border-radius:12px;
+                font-size:14px;
+                font-weight:bold;
             }
 
             QPushButton:hover{

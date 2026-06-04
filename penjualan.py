@@ -804,7 +804,7 @@ class PenjualanPage(QWidget):
 
         transaksi = {
             "tanggal": QDate.currentDate().toString(
-                "dd MMMM yyyy"
+                "dd/MM/yyyy"
             ),
             "transaksi": f"TRX{len(self.data_penjualan)+1:03}",
             "pelanggan": "Umum",

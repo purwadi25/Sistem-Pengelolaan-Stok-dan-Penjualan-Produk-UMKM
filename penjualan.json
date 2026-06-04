@@ -61,5 +61,21 @@
         "total": "Rp 20.000",
         "status": "Selesai",
         "keuntungan": 10000
+    },
+    {
+        "transaksi": "TRX009",
+        "tanggal": "04/06/2026",
+        "pelanggan": "Pelanggan Umum",
+        "total": "Rp 11000",
+        "status": "Selesai"
+    },
+    {
+        "tanggal": "04 June 2026",
+        "transaksi": "TRX010",
+        "pelanggan": "Umum",
+        "kategori": "Makanan",
+        "total": "Rp 11.000",
+        "status": "Selesai",
+        "keuntungan": 9000
     }
 ]
