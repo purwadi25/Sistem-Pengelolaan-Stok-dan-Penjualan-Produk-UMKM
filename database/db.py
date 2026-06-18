@@ -66,35 +66,18 @@ def init_db() -> None:
                 ON item_jual(produk_id);
         """)
 
-        exists = conn.execute(
-            "SELECT name FROM sqlite_master WHERE type='table' AND name='pengguna'"
-        ).fetchone()
-        if exists is None:
-            conn.execute("""
-                CREATE TABLE pengguna (
-                    id           INTEGER PRIMARY KEY AUTOINCREMENT,
-                    username     TEXT    NOT NULL UNIQUE,
-                    password     TEXT    NOT NULL,
-                    nama_toko    TEXT    NOT NULL DEFAULT '',
-                    nama_pemilik TEXT    NOT NULL DEFAULT '',
-                    alamat       TEXT    NOT NULL DEFAULT '',
-                    telepon      TEXT    NOT NULL DEFAULT ''
-                )
-            """)
-            conn.commit()
-
-        # Buat akun default jika tabel pengguna masih kosong
-        with get_connection() as conn:
-            count = conn.execute("SELECT COUNT(*) FROM pengguna").fetchone()[0]
-            if count == 0:
-                import hashlib
-                default_hash = hashlib.sha256("admin123".encode()).hexdigest()
-                conn.execute(
-                    """INSERT INTO pengguna (username, password, nama_toko,
-                       nama_pemilik, alamat, telepon)
-                       VALUES (?, ?, '', '', '', '')""",
-                    ("admin", default_hash),
-                )
+    # Buat akun default jika tabel pengguna masih kosong
+    with get_connection() as conn:
+        count = conn.execute("SELECT COUNT(*) FROM pengguna").fetchone()[0]
+        if count == 0:
+            import hashlib
+            default_hash = hashlib.sha256("admin123".encode()).hexdigest()
+            conn.execute(
+                """INSERT INTO pengguna (username, password, nama_toko,
+                    nama_pemilik, alamat, telepon)
+                    VALUES (?, ?, '', '', '', '')""",
+                ("admin", default_hash),
+            )
 
 # PRODUK — CRUD
 def produk_get_all() -> list[dict]:
