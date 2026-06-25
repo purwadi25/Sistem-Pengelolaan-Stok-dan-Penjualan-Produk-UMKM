@@ -24,8 +24,8 @@ from gui.pengaturan    import PengaturanPage
 # Info anggota kelompok
 ANGGOTA = [
     ("Lutfi Alfarizi",  "F1D02310121"),
-    ("Lalu Ahmad Purwadi",  "F1D02310xxx"),
-    ("Salsa Reike Maharani",  "F1D02310xxx"),
+    ("Lalu Ahmad Purwadi",  "F1D02310115"),
+    ("Salsa Reike Maharani",  "F1D02310136"),
 ]
 STATUS_BAR_TEXT = "  |  ".join(
     f"{n}  [{nim}]" for n, nim in ANGGOTA
