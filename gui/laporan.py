@@ -18,7 +18,8 @@ from utils.styles import (
 from utils.storage import format_rupiah
 from database.db   import penjualan_filter
 from utils.exporter import export_laporan_pdf, export_penjualan_csv
-
+from gui.detail_transaksi import DetailTransaksiDialog
+from utils.kategori import KATEGORI_TRANSAKSI
 
 class LaporanPenjualanPage(QWidget):
     def __init__(self, data_penjualan: list):
@@ -160,7 +161,7 @@ class LaporanPenjualanPage(QWidget):
 
         # Filter kategori
         self._combo_filter = QComboBox()
-        self._combo_filter.addItems(["Semua Kategori", "Makanan", "Minuman", "Snack", "Lainnya"])
+        self._combo_filter.addItems(["Semua Kategori"] + KATEGORI_TRANSAKSI)
         self._combo_filter.setFixedSize(180, 38)
         self._combo_filter.setStyleSheet(COMBO_STYLE)
         self._combo_filter.currentIndexChanged.connect(self.refresh_table)
@@ -278,20 +279,26 @@ class LaporanPenjualanPage(QWidget):
 
         self._table = QTableWidget(0, 6)
         self._table.setHorizontalHeaderLabels([
-            "No Transaksi", "Tanggal", "Kategori", "Total", "Keuntungan", "Status"
+            "No Transaksi", "Tanggal", "Kategori", "Total", "Keuntungan", "Status", "Detail"
         ])
         self._table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self._table.horizontalHeader().setSectionResizeMode(6, QHeaderView.Fixed)
+        self._table.setColumnWidth(6, 90)
         self._table.verticalHeader().setVisible(False)
+        self._table.verticalHeader().setDefaultSectionSize(48)
         self._table.setAlternatingRowColors(True)
         self._table.setEditTriggers(QTableWidget.NoEditTriggers)
+        self._table.setSelectionMode(QTableWidget.NoSelection)
+        self._table.setShowGrid(False)
         self._table.setMinimumHeight(380)
         self._table.setSortingEnabled(True)
         self._table.setStyleSheet(TABLE_STYLE)
         layout.addWidget(self._table)
         return card
 
-    # REFRESH TABEL
+    # REFRESH TABLE
     def refresh_table(self):
+        self._table.setSortingEnabled(False)
         self._table.setRowCount(0)
         self._series.clear()
 
@@ -307,20 +314,25 @@ class LaporanPenjualanPage(QWidget):
 
             # Filter tanggal
             tanggal_str = t.get("tanggal", "")
-            tgl = QDate.fromString(tanggal_str, "dd MMMM yyyy")
+            tgl = QDate.fromString(tanggal_str, "yyyy-MM-dd")
             if tgl.isValid():
                 if tgl < tanggal_dari or tgl > tanggal_sampai:
                     continue
 
             filtered.append(t)
 
+        chart_data = sorted(
+            filtered,
+            key=lambda t: QDate.fromString(t.get("tanggal", ""), "yyyy-MM-dd"),
+        )
+
         # Update grafik
-        for i, t in enumerate(filtered):
+        for i, t in enumerate(chart_data):
             self._series.append(i, t.get("total", 0))
 
-        if filtered:
-            max_total = max(t.get("total", 0) for t in filtered)
-            self._axis_x.setRange(0, max(len(filtered), 1))
+        if chart_data:
+            max_total = max(t.get("total", 0) for t in chart_data)
+            self._axis_x.setRange(0, max(len(chart_data), 1))
             self._axis_y.setRange(0, max_total + 10000)
         else:
             self._axis_x.setRange(0, 1)
@@ -344,7 +356,7 @@ class LaporanPenjualanPage(QWidget):
             total_item += sum(i.get("qty", 0) for i in t.get("items", []))
 
             for col, val in enumerate([
-                t.get("transaksi", "-"),
+                t.get("no_transaksi") or t.get("transaksi", "-"),
                 t.get("tanggal", "-"),
                 t.get("kategori", "-"),
                 format_rupiah(total_val),
@@ -358,11 +370,41 @@ class LaporanPenjualanPage(QWidget):
                     item.setForeground(QColor("#16a34a"))
                 self._table.setItem(row, col, item)
 
+            self._table.setCellWidget(row, 6, self._make_detail_btn(t))
+
         # Update kartu statistik
         self._val_pendapatan.setText(format_rupiah(total_pendapatan))
         self._val_transaksi.setText(str(len(filtered)))
         self._val_item.setText(str(total_item))
         self._val_untung.setText(format_rupiah(total_keuntungan))
+
+        self._table.setSortingEnabled(True)
+
+    # ----------------------------------------------------------
+    def _make_detail_btn(self, transaksi: dict) -> QWidget:
+        container = QWidget()
+        container.setStyleSheet("background:transparent;")
+        lay = QHBoxLayout(container)
+        lay.setContentsMargins(6, 5, 6, 5)
+        lay.setSpacing(0)
+
+        btn = QPushButton("🔍 Detail")
+        btn.setFixedHeight(34)
+        btn.setCursor(Qt.PointingHandCursor)
+        btn.setStyleSheet("""
+            QPushButton {
+                background:#3b82f6; color:white; border:none;
+                border-radius:7px; font-size:11px; font-weight:bold; padding:0 6px;
+            }
+            QPushButton:hover { background:#2563eb; }
+        """)
+        btn.clicked.connect(lambda _, t=transaksi: self._open_detail(t))
+        lay.addWidget(btn)
+        return container
+
+    def _open_detail(self, transaksi: dict):
+        dlg = DetailTransaksiDialog(self, transaksi=transaksi)
+        dlg.exec()
 
     # ----------------------------------------------------------
     def _reset_filter(self):

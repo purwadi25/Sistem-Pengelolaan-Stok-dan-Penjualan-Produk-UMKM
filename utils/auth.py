@@ -24,11 +24,9 @@ def verify_login(username: str, password: str) -> bool:
         return False
     return _hash_password(password) == creds.get("password")
 
-
 def update_credentials(username: str, password: str) -> None:
     current = load_credentials()
     pengguna_update_akun(current["username"], username, _hash_password(password))
-
 
 def update_info_toko(nama_toko: str, nama_pemilik: str, alamat: str, telepon: str) -> None:
     current = load_credentials()

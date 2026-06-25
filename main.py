@@ -233,10 +233,10 @@ class MainWindow(QMainWindow):
         # Menu EXPORT
         export_menu = mb.addMenu("📤  Export")
 
-        act_csv_produk  = QAction("CSV - Daftar Produk",        self)
-        act_csv_jual    = QAction("CSV - Laporan Penjualan",     self)
-        act_pdf_produk  = QAction("PDF - Daftar Produk",        self)
-        act_pdf_laporan = QAction("PDF - Laporan Penjualan",     self)
+        act_csv_produk  = QAction("CSV — Daftar Produk",        self)
+        act_csv_jual    = QAction("CSV — Laporan Penjualan",     self)
+        act_pdf_produk  = QAction("PDF — Daftar Produk",        self)
+        act_pdf_laporan = QAction("PDF — Laporan Penjualan",     self)
 
         act_csv_produk.triggered.connect(self._export_csv_produk)
         act_csv_jual.triggered.connect(self._export_csv_penjualan)

@@ -215,6 +215,8 @@ class DashboardPage(QWidget):
         self.stok_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.stok_table.verticalHeader().setVisible(False)
         self.stok_table.setEditTriggers(QTableWidget.NoEditTriggers)
+        self.stok_table.setSelectionMode(QTableWidget.NoSelection)
+        self.stok_table.setShowGrid(False)
         self.stok_table.setStyleSheet(TABLE_STYLE)
         layout.addWidget(self.stok_table)
         return frame
@@ -235,6 +237,8 @@ class DashboardPage(QWidget):
         self.jual_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.jual_table.verticalHeader().setVisible(False)
         self.jual_table.setEditTriggers(QTableWidget.NoEditTriggers)
+        self.jual_table.setSelectionMode(QTableWidget.NoSelection)
+        self.jual_table.setShowGrid(False)
         self.jual_table.setStyleSheet(TABLE_STYLE)
         layout.addWidget(self.jual_table)
         return frame
@@ -264,7 +268,7 @@ class DashboardPage(QWidget):
             row = self.jual_table.rowCount()
             self.jual_table.insertRow(row)
             for col, val in enumerate([
-                t.get("tanggal", "-"), t.get("transaksi", "-"),
+                t.get("tanggal", "-"), t.get("no_transaksi") or t.get("transaksi", "-"),
                 format_rupiah(t.get("total", 0)), t.get("status", "-"),
             ]):
                 item = QTableWidgetItem(val)

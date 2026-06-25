@@ -63,8 +63,7 @@ def export_penjualan_csv(data_penjualan: list, filepath: str | None = None, dari
     return path
 
 # EXPORT DATA PRODUK KE FORMAT PDF
-def export_produk_pdf(data_produk: list, filepath: str | None = None,
-                       nama_toko: str = "UMKM Stock") -> str:
+def export_produk_pdf(data_produk: list, filepath: str | None = None, nama_toko: str = "UMKM Stock") -> str:
     path   = filepath or _default_path("Produk", "pdf")
     doc    = SimpleDocTemplate(
         path,
@@ -109,7 +108,7 @@ def export_produk_pdf(data_produk: list, filepath: str | None = None,
     story.append(tbl)
     doc.build(story)
     return path
- 
+
 # EXPORT DATA PENJUALAN KE FORMAT PDF
 def export_laporan_pdf(data_penjualan: list, filepath: str | None = None, dari: str = "", sampai: str = "", kategori: str = "", nama_toko: str = "UMKM Stock") -> str:
     path = filepath or _default_path("Laporan", "pdf")

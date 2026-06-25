@@ -5,14 +5,14 @@ from datetime import datetime
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DB_PATH  = os.path.join(BASE_DIR, "database", "umkm.db")
 
-# KONEKSI
+#KONEKSI
 def get_connection() -> sqlite3.Connection:
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")
     return conn
 
-# INISIALISASI — buat tabel jika belum ada
+#INISIALISASI
 def init_db() -> None:
     with get_connection() as conn:
         conn.executescript("""
@@ -60,26 +60,42 @@ def init_db() -> None:
                 telepon      TEXT    NOT NULL DEFAULT ''
             );
 
+            CREATE TABLE IF NOT EXISTS pembelian_stok (
+                id           INTEGER PRIMARY KEY AUTOINCREMENT,
+                produk_id    INTEGER REFERENCES produk(id) ON DELETE SET NULL,
+                nama_produk  TEXT    NOT NULL,
+                jenis        TEXT    NOT NULL DEFAULT 'Baru',
+                stok_lama    INTEGER NOT NULL DEFAULT 0,
+                jumlah_tambah INTEGER NOT NULL DEFAULT 0,
+                stok_baru    INTEGER NOT NULL DEFAULT 0,
+                harga_modal  INTEGER NOT NULL DEFAULT 0,
+                total_modal  INTEGER NOT NULL DEFAULT 0,
+                dibuat_pada  TEXT    NOT NULL DEFAULT (datetime('now','localtime'))
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_pembelian_produk
+                ON pembelian_stok(produk_id);
+
             CREATE INDEX IF NOT EXISTS idx_item_jual_penjualan
                 ON item_jual(penjualan_id);
             CREATE INDEX IF NOT EXISTS idx_item_jual_produk
                 ON item_jual(produk_id);
         """)
+        
+        # Buat akun default jika tabel pengguna masih kosong
+        with get_connection() as conn:
+            count = conn.execute("SELECT COUNT(*) FROM pengguna").fetchone()[0]
+            if count == 0:
+                import hashlib
+                default_hash = hashlib.sha256("admin123".encode()).hexdigest()
+                conn.execute(
+                    """INSERT INTO pengguna (username, password, nama_toko,
+                       nama_pemilik, alamat, telepon)
+                       VALUES (?, ?, '', '', '', '')""",
+                    ("admin", default_hash),
+                )
 
-    # Buat akun default jika tabel pengguna masih kosong
-    with get_connection() as conn:
-        count = conn.execute("SELECT COUNT(*) FROM pengguna").fetchone()[0]
-        if count == 0:
-            import hashlib
-            default_hash = hashlib.sha256("admin123".encode()).hexdigest()
-            conn.execute(
-                """INSERT INTO pengguna (username, password, nama_toko,
-                    nama_pemilik, alamat, telepon)
-                    VALUES (?, ?, '', '', '', '')""",
-                ("admin", default_hash),
-            )
-
-# PRODUK — CRUD
+# PRODUK - CRUD
 def produk_get_all() -> list[dict]:
     with get_connection() as conn:
         rows = conn.execute(
@@ -94,7 +110,7 @@ def produk_get_by_id(produk_id: int) -> dict | None:
         ).fetchone()
     return dict(row) if row else None
 
-def produk_insert(nama: str, kategori: str, harga: int, modal: int, stok: int, satuan: str) -> int:
+def produk_insert(nama: str, kategori: str, harga: int, modal: int,stok: int, satuan: str) -> int:
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     with get_connection() as conn:
         cur = conn.execute(
@@ -103,16 +119,41 @@ def produk_insert(nama: str, kategori: str, harga: int, modal: int, stok: int, s
                VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
             (nama, kategori, harga, modal, stok, satuan, now, now),
         )
-        return cur.lastrowid
+        produk_id = cur.lastrowid
+
+        if stok > 0:
+            conn.execute(
+                """INSERT INTO pembelian_stok
+                   (produk_id, nama_produk, jenis, stok_lama, jumlah_tambah,
+                    stok_baru, harga_modal, total_modal, dibuat_pada)
+                   VALUES (?, ?, 'Baru', 0, ?, ?, ?, ?, ?)""",
+                (produk_id, nama, stok, stok, modal, modal * stok, now),
+            )
+    return produk_id
 
 def produk_update(produk_id: int, nama: str, kategori: str, harga: int, modal: int, stok: int, satuan: str) -> None:
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     with get_connection() as conn:
+        row_lama = conn.execute(
+            "SELECT stok FROM produk WHERE id=?", (produk_id,)
+        ).fetchone()
+        stok_lama = row_lama["stok"] if row_lama else 0
+
         conn.execute(
             """UPDATE produk SET nama=?, kategori=?, harga=?, modal=?,
                stok=?, satuan=?, diubah_pada=? WHERE id=?""",
             (nama, kategori, harga, modal, stok, satuan, now, produk_id),
         )
+
+        selisih = stok - stok_lama
+        if selisih > 0:
+            conn.execute(
+                """INSERT INTO pembelian_stok
+                   (produk_id, nama_produk, jenis, stok_lama, jumlah_tambah,
+                    stok_baru, harga_modal, total_modal, dibuat_pada)
+                   VALUES (?, ?, 'Restock', ?, ?, ?, ?, ?, ?)""",
+                (produk_id, nama, stok_lama, selisih, stok, modal, modal * selisih, now),
+            )
 
 def produk_update_stok(produk_id: int, stok_baru: int) -> None:
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -134,13 +175,37 @@ def produk_search(keyword: str) -> list[dict]:
         ).fetchall()
     return [dict(r) for r in rows]
 
+# PEMBELIAN STOK — riwayat penambahan stok (produk baru & restock)
+def pembelian_get_all() -> list[dict]:
+    with get_connection() as conn:
+        rows = conn.execute(
+            "SELECT * FROM pembelian_stok ORDER BY id DESC"
+        ).fetchall()
+    return [dict(r) for r in rows]
+
+def pembelian_get_by_produk(produk_id: int) -> list[dict]:
+    with get_connection() as conn:
+        rows = conn.execute(
+            "SELECT * FROM pembelian_stok WHERE produk_id=? ORDER BY id DESC",
+            (produk_id,),
+        ).fetchall()
+    return [dict(r) for r in rows]
+
 # PENJUALAN — CRUD
 def penjualan_get_all() -> list[dict]:
     with get_connection() as conn:
         rows = conn.execute(
             "SELECT * FROM penjualan ORDER BY id DESC"
         ).fetchall()
-    return [dict(r) for r in rows]
+        result = []
+        for row in rows:
+            t = dict(row)
+            items = conn.execute(
+                "SELECT * FROM item_jual WHERE penjualan_id=?", (t["id"],)
+            ).fetchall()
+            t["items"] = [dict(i) for i in items]
+            result.append(t)
+    return result
 
 def penjualan_get_with_items(penjualan_id: int) -> dict | None:
     with get_connection() as conn:

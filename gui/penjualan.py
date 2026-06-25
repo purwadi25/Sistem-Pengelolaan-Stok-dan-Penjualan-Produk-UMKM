@@ -15,6 +15,8 @@ from database.db   import (
     penjualan_insert, produk_update_stok, produk_get_all,
     penjualan_get_all,
 )
+from gui.detail_transaksi import DetailTransaksiDialog
+from utils.kategori import hitung_kategori_gabungan
 
 class PenjualanPage(QWidget):
     def __init__(self, data_produk: list, data_penjualan: list, dashboard):
@@ -121,6 +123,7 @@ class PenjualanPage(QWidget):
         self._table_produk.setSortingEnabled(True)
         self._table_produk.verticalHeader().setVisible(False)
         self._table_produk.setEditTriggers(QTableWidget.NoEditTriggers)
+        self._table_produk.setShowGrid(False)
         self._table_produk.setMinimumHeight(280)
         self._table_produk.setStyleSheet(TABLE_STYLE)
         self._table_produk.cellClicked.connect(self._handle_produk_click)
@@ -145,6 +148,7 @@ class PenjualanPage(QWidget):
         self._table_keranjang.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self._table_keranjang.verticalHeader().setVisible(False)
         self._table_keranjang.setEditTriggers(QTableWidget.NoEditTriggers)
+        self._table_keranjang.setShowGrid(False)
         self._table_keranjang.setMinimumHeight(180)
         self._table_keranjang.setStyleSheet(TABLE_STYLE)
         self._table_keranjang.cellClicked.connect(self._handle_keranjang_click)
@@ -181,11 +185,16 @@ class PenjualanPage(QWidget):
 
         self._table_riwayat = QTableWidget(0, 6)
         self._table_riwayat.setHorizontalHeaderLabels(
-            ["No Transaksi", "Tanggal", "Kategori", "Pelanggan", "Total", "Status"])
+            ["No Transaksi", "Tanggal", "Kategori", "Pelanggan", "Total", "Status", "Detail"])
         self._table_riwayat.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self._table_riwayat.horizontalHeader().setSectionResizeMode(6, QHeaderView.Fixed)
+        self._table_riwayat.setColumnWidth(6, 90)
         self._table_riwayat.setSortingEnabled(True)
         self._table_riwayat.verticalHeader().setVisible(False)
+        self._table_riwayat.verticalHeader().setDefaultSectionSize(48)
         self._table_riwayat.setEditTriggers(QTableWidget.NoEditTriggers)
+        self._table_riwayat.setSelectionMode(QTableWidget.NoSelection)
+        self._table_riwayat.setShowGrid(False)
         self._table_riwayat.setMinimumHeight(220)
         self._table_riwayat.setStyleSheet(TABLE_STYLE)
         lay.addWidget(self._table_riwayat)
@@ -274,7 +283,9 @@ class PenjualanPage(QWidget):
             return
 
         total = 0; total_untung = 0; items_db = []
-        kategori_utama = self.keranjang[0]["kategori"]
+        kategori_utama = hitung_kategori_gabungan(
+            [item["kategori"] for item in self.keranjang]
+        )
 
         for item in self.keranjang:
             subtotal = item["harga"] * item["qty"]
@@ -337,7 +348,33 @@ class PenjualanPage(QWidget):
                 item.setForeground(QColor("#16a34a" if (col == 5 and val == "Selesai")
                                           else COLOR_TEXT_DARK))
                 self._table_riwayat.setItem(row, col, item)
+            self._table_riwayat.setCellWidget(row, 6, self._make_detail_btn(t))
         self._table_riwayat.setSortingEnabled(True)
+
+    def _make_detail_btn(self, transaksi: dict) -> QWidget:
+        container = QWidget()
+        container.setStyleSheet("background:transparent;")
+        lay = QHBoxLayout(container)
+        lay.setContentsMargins(6, 5, 6, 5)
+        lay.setSpacing(0)
+
+        btn = QPushButton("🔍 Detail")
+        btn.setFixedHeight(34)
+        btn.setCursor(Qt.PointingHandCursor)
+        btn.setStyleSheet("""
+            QPushButton {
+                background:#3b82f6; color:white; border:none;
+                border-radius:7px; font-size:11px; font-weight:bold; padding:0 6px;
+            }
+            QPushButton:hover { background:#2563eb; }
+        """)
+        btn.clicked.connect(lambda _, t=transaksi: self._open_detail(t))
+        lay.addWidget(btn)
+        return container
+
+    def _open_detail(self, transaksi: dict):
+        dlg = DetailTransaksiDialog(self, transaksi=transaksi)
+        dlg.exec()
 
     def _update_statistik(self):
         total_item = sum(

@@ -3,19 +3,21 @@ from PySide6.QtWidgets import (
     QHBoxLayout, QFrame, QLineEdit, QComboBox,
     QTableWidget, QTableWidgetItem, QHeaderView,
     QMessageBox, QScrollArea, QDialog, QDialogButtonBox,
+    QStackedWidget,
 )
 from PySide6.QtCore import Qt, QPropertyAnimation, QEasingCurve, QSortFilterProxyModel
-from PySide6.QtGui  import QColor
+from PySide6.QtGui  import QColor, QCursor
 
 from utils.styles import (
     PAGE_STYLE, CARD_STYLE, INPUT_STYLE, COMBO_STYLE,
     TABLE_STYLE, BTN_PRIMARY_STYLE, BTN_SECONDARY_STYLE,
-    COLOR_TEXT_DARK, COLOR_TEXT_MUTED,
+    COLOR_TEXT_DARK, COLOR_TEXT_MUTED, COLOR_PRIMARY,
 )
 from database.db import (
     produk_get_all, produk_insert, produk_update,
-    produk_delete, produk_search,
+    produk_delete, produk_search, pembelian_get_all,
 )
+from utils.storage import format_rupiah
 
 # DIALOG — Tambah / Edit Produk
 class ProdukDialog(QDialog):
@@ -142,6 +144,9 @@ class ProdukDialog(QDialog):
 
 # HALAMAN KELOLA PRODUK
 class KelolaProdukPage(QWidget):
+    IDX_PRODUK   = 0
+    IDX_RIWAYAT  = 1
+
     def __init__(self, data_produk: list, dashboard):
         super().__init__()
         self.data_produk   = data_produk
@@ -182,9 +187,71 @@ class KelolaProdukPage(QWidget):
 
         root.addWidget(h1)
         root.addWidget(sub)
-        root.addWidget(self._build_table_card())
+        root.addWidget(self._build_tab_bar())
+
+        self._stack = QStackedWidget()
+        self._stack.addWidget(self._build_table_card())
+        self._stack.addWidget(self._build_riwayat_card())
+        root.addWidget(self._stack)
 
         self._refresh_table()
+        self._refresh_riwayat_pembelian()
+
+    # ----------------------------------------------------------
+    def _build_tab_bar(self) -> QFrame:
+        bar = QFrame()
+        bar.setFixedHeight(54)
+        bar.setStyleSheet("""
+            QFrame { background:white; border-radius:14px; border:1px solid #e5e7eb; }
+            QLabel { background:transparent; border:none; }
+            QPushButton { border:none; }
+        """)
+        layout = QHBoxLayout(bar)
+        layout.setContentsMargins(8, 8, 8, 8)
+        layout.setSpacing(6)
+
+        self._tab_produk  = QPushButton("📦  Daftar Produk")
+        self._tab_riwayat = QPushButton("🧾  Riwayat Pembelian Stok")
+
+        for btn in [self._tab_produk, self._tab_riwayat]:
+            btn.setMinimumHeight(36)
+            btn.setCursor(QCursor(Qt.PointingHandCursor))
+
+        self._tab_produk.clicked.connect(lambda: self._show_tab(self.IDX_PRODUK))
+        self._tab_riwayat.clicked.connect(lambda: self._show_tab(self.IDX_RIWAYAT))
+
+        layout.addWidget(self._tab_produk)
+        layout.addWidget(self._tab_riwayat)
+        layout.addStretch()
+
+        self._refresh_tab_style(self.IDX_PRODUK)
+        return bar
+
+    def _tab_style(self, active: bool) -> str:
+        if active:
+            return f"""
+                QPushButton {{
+                    background:{COLOR_PRIMARY}; color:white; border-radius:10px;
+                    font-size:14px; font-weight:bold; padding:0 22px;
+                }}
+            """
+        return f"""
+            QPushButton {{
+                background:transparent; color:{COLOR_TEXT_MUTED}; border-radius:10px;
+                font-size:14px; padding:0 22px;
+            }}
+            QPushButton:hover {{ background:#f3f4f6; color:{COLOR_TEXT_DARK}; }}
+        """
+
+    def _refresh_tab_style(self, active_idx: int):
+        self._tab_produk.setStyleSheet(self._tab_style(active_idx == self.IDX_PRODUK))
+        self._tab_riwayat.setStyleSheet(self._tab_style(active_idx == self.IDX_RIWAYAT))
+
+    def _show_tab(self, idx: int):
+        self._stack.setCurrentIndex(idx)
+        self._refresh_tab_style(idx)
+        if idx == self.IDX_RIWAYAT:
+            self._refresh_riwayat_pembelian()
 
     # ==========================================================
     def _build_table_card(self) -> QFrame:
@@ -200,6 +267,13 @@ class KelolaProdukPage(QWidget):
         title.setStyleSheet(f"font-size:22px; font-weight:700; color:{COLOR_TEXT_DARK};")
         top_row.addWidget(title)
         top_row.addStretch()
+
+        refresh_btn = QPushButton("🔄  Refresh")
+        refresh_btn.setFixedHeight(42)
+        refresh_btn.setCursor(QCursor(Qt.PointingHandCursor))
+        refresh_btn.setStyleSheet(BTN_SECONDARY_STYLE)
+        refresh_btn.clicked.connect(self._refresh_from_db)
+        top_row.addWidget(refresh_btn)
 
         tambah_btn = QPushButton("➕  Tambah Produk")
         tambah_btn.setFixedHeight(42)
@@ -376,10 +450,105 @@ class KelolaProdukPage(QWidget):
     # ==========================================================
     def _after_change(self):
         self._refresh_table()
+        self._refresh_riwayat_pembelian()
         self.dashboard.refresh_dashboard()
         win = self.window()
         if hasattr(win, "penjualan_page"):
             win.penjualan_page.refresh_produk()
+
+    # TOMBOL REFRESH
+    def _refresh_from_db(self):
+        self.data_produk[:] = produk_get_all()
+        self._search_inp.clear()
+        self._refresh_table()
+        self.dashboard.refresh_dashboard()
+        win = self.window()
+        if hasattr(win, "penjualan_page"):
+            win.penjualan_page.refresh_produk()
+
+    # RIWAYAT PEMBELIAN STOK
+    def _build_riwayat_card(self) -> QFrame:
+        card = QFrame()
+        card.setStyleSheet(CARD_STYLE)
+        layout = QVBoxLayout(card)
+        layout.setContentsMargins(28, 28, 28, 28)
+        layout.setSpacing(16)
+
+        top_row = QHBoxLayout()
+        title = QLabel("🧾 Riwayat Pembelian Stok")
+        title.setStyleSheet(f"font-size:22px; font-weight:700; color:{COLOR_TEXT_DARK};")
+        top_row.addWidget(title)
+        top_row.addStretch()
+
+        refresh_btn = QPushButton("🔄  Refresh")
+        refresh_btn.setFixedHeight(42)
+        refresh_btn.setCursor(QCursor(Qt.PointingHandCursor))
+        refresh_btn.setStyleSheet(BTN_SECONDARY_STYLE)
+        refresh_btn.clicked.connect(self._refresh_riwayat_pembelian)
+        top_row.addWidget(refresh_btn)
+        layout.addLayout(top_row)
+
+        desc = QLabel(
+            "Mencatat setiap kali stok produk bertambah — baik saat produk "
+            "baru ditambahkan maupun saat stok produk lama ditambah (restock)."
+        )
+        desc.setStyleSheet(f"color:{COLOR_TEXT_MUTED}; font-size:13px;")
+        desc.setWordWrap(True)
+        layout.addWidget(desc)
+
+        self._riwayat_table = QTableWidget(0, 8)
+        self._riwayat_table.setHorizontalHeaderLabels([
+            "Tanggal", "Nama Produk", "Jenis", "Stok Lama",
+            "Jumlah Ditambah", "Stok Baru", "Harga Modal", "Total Modal",
+        ])
+        hh = self._riwayat_table.horizontalHeader()
+        hh.setSectionResizeMode(QHeaderView.Stretch)
+
+        self._riwayat_table.verticalHeader().setVisible(False)
+        self._riwayat_table.verticalHeader().setDefaultSectionSize(44)
+        self._riwayat_table.setAlternatingRowColors(True)
+        self._riwayat_table.setEditTriggers(QTableWidget.NoEditTriggers)
+        self._riwayat_table.setSelectionMode(QTableWidget.NoSelection)
+        self._riwayat_table.setShowGrid(False)
+        self._riwayat_table.setSortingEnabled(True)
+        self._riwayat_table.setMinimumHeight(420)
+        self._riwayat_table.setStyleSheet(TABLE_STYLE)
+        layout.addWidget(self._riwayat_table)
+        return card
+
+    def _refresh_riwayat_pembelian(self):
+        self._riwayat_table.setSortingEnabled(False)
+        self._riwayat_table.setRowCount(0)
+
+        for p in pembelian_get_all():
+            row = self._riwayat_table.rowCount()
+            self._riwayat_table.insertRow(row)
+
+            jenis = p.get("jenis", "-")
+            jenis_color = "#3b82f6" if jenis == "Baru" else "#f59e0b"
+
+            cols = [
+                p.get("dibuat_pada", "-"),
+                p.get("nama_produk", "-"),
+                jenis,
+                str(p.get("stok_lama", 0)),
+                f"+{p.get('jumlah_tambah', 0)}",
+                str(p.get("stok_baru", 0)),
+                format_rupiah(p.get("harga_modal", 0)),
+                format_rupiah(p.get("total_modal", 0)),
+            ]
+            for col, val in enumerate(cols):
+                item = QTableWidgetItem(val)
+                item.setTextAlignment(Qt.AlignCenter)
+                if col == 2:
+                    item.setForeground(QColor(jenis_color))
+                elif col == 4:
+                    item.setForeground(QColor("#16a34a"))
+                else:
+                    item.setForeground(QColor(COLOR_TEXT_DARK))
+                self._riwayat_table.setItem(row, col, item)
+
+        self._riwayat_table.setSortingEnabled(True)
 
     # ==========================================================
     def _smooth_wheel(self, event):
