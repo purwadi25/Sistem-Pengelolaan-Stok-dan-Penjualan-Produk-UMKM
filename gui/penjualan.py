@@ -183,7 +183,7 @@ class PenjualanPage(QWidget):
         title.setStyleSheet(f"font-size:20px; font-weight:bold; color:{COLOR_TEXT_DARK};")
         lay.addWidget(title)
 
-        self._table_riwayat = QTableWidget(0, 6)
+        self._table_riwayat = QTableWidget(0, 7)
         self._table_riwayat.setHorizontalHeaderLabels(
             ["No Transaksi", "Tanggal", "Kategori", "Pelanggan", "Total", "Status", "Detail"])
         self._table_riwayat.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)

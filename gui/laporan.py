@@ -277,7 +277,7 @@ class LaporanPenjualanPage(QWidget):
         title_row.addWidget(pdf_btn)
         layout.addLayout(title_row)
 
-        self._table = QTableWidget(0, 6)
+        self._table = QTableWidget(0, 7)
         self._table.setHorizontalHeaderLabels([
             "No Transaksi", "Tanggal", "Kategori", "Total", "Keuntungan", "Status", "Detail"
         ])
